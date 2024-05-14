@@ -31,3 +31,39 @@ https://sports.lvyclv.com/live/m33268182/playlist.m3u8
 
 #EXTINF:-1 group-title="Notice" tvg-logo="https://i.imgur.com/n3r7sEr.jpg",Notice
 https://i.imgur.com/bpOkjlP.mp4
+
+
+
+
+
+#EXTINF:-1 group-title="ISLAMIC" tvg-logo="https://i.postimg.cc/jdK93HTJ/images-5-10.jpg",Peace Tv
+https://dzkyvlfyge.erbvr.com/PeaceTvBangla/tracks-v3a1/mono.m3u8
+
+#EXTINF:-1 tvg-id="" tvg-name="IQRA" tvg-logo="https://iqra.tv/wp-content/uploads/2023/10/IQRA-LOGO-PNG-connecting-you-to-the-source.jpg" group-title="ISLAMIC", ION TV
+https://livess.ncare.live/live-orgin/iontvuk.stream/chunks.m3u8
+
+#EXTINF:-1 group-title="ISLAMIC" tvg-logo="https://i.imgur.com/9gffd60.png",Makkah Tv
+https://livess.ncare.live/live-orgin/makkahtv.stream/chunks.m3u8
+
+#EXTINF:-1 group-title="ISLAMIC" tvg-logo="https://i.ibb.co/5vFbq01/images-28.jpg",IQRA Bangla
+https://livess.ncare.live/live-orgin/iqrabanglatvoffice.stream/chunks.m3u8
+
+#EXTINF:-1 group-title="ISLAMIC" tvg-logo="https://i.postimg.cc/ncC7J5n8/images-5-18.jpg",Deen Tv Uk
+https://livess.ncare.live/live-orgin/deentv.stream/chunks.m3u8
+
+#EXTINF:-1 group-title="ISLAMIC" tvg-logo="https://i.imgur.com/GQhXlx8.jpg",Madina Tv
+https://streaming.madanichannel.tv/static/streaming-playlists/hls/d3e49b76-ac06-4689-a641-9200445b647f/master.m3u8
+
+#EXTINF:-1 group-title="ISLAMIC" tvg-logo="https://i.imgur.com/M0K68o5.png",Islam Tv
+https://livess.ncare.live/live-orgin/islamtv.stream/chunks.m3u8
+
+#EXTINF:-1 group-title="ISLAMIC" tvg-logo="https://i.imgur.com/afhANph.jpg",Makka Live
+
+
+#EXTINF:-1 group-title="ISLAMIC" tvg-logo="https://i.imgur.com/xuNhiek.png",Islam Bangla
+https://pull-cdnw.anystream.uk/live/cf46c8b0018c10009acded4c00000000/playlist.m3u8
+
+
+
+
+
