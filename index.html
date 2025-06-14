@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BDStreamHub - Live Matches & Upcoming</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.4/lottie.min.js"></script>
+  <!-- manifest ফাইল লিংক -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Service Worker রেজিস্টার -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log("✅ Service Worker registered"))
+      .catch(err => console.log("❌ SW error:", err));
+  }
+</script>
+  <style>
+  	.menu-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.menu-toggle {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #0ff;
+  cursor: pointer;
+  padding: 5px;
+  margin-left: 10px;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 30px;
+  background-color: #222;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.7);
+  border-radius: 8px;
+  z-index: 1001;
+  overflow: hidden;
+  min-width: 180px;
+}
+
+.dropdown-content a {
+  color: #fff;
+  padding: 10px 16px;
+  display: block;
+  text-decoration: none;
+  font-size: 14px;
+  transition: background 0.3s ease;
+}
+
+.dropdown-content a:hover {
+  background-color: #0af;
+}
+
+.menu-dropdown:hover .dropdown-content {
+  display: block;
+}
+    body {
+      margin: 0;
+      background: #111;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    nav {
+      background: #222;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      font-size: 20px;
+      font-weight: bold;
+      color: #0ff;
+    }
+    .search-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+    }
+    .search-container input {
+      border-radius: 25px;
+      padding: 8px 15px;
+      border: none;
+      outline: none;
+      width: 70%;
+      max-width: 300px;
+      background: #333;
+      color: #fff;
+      text-align: center;
+    }
+    .notice {
+      background: yellow;
+      color: #000;
+      padding: 10px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    /* সাব-ট্যাব স্টাইল */
+    .sub-tab-btns {
+      padding: 8px;
+      text-align: center;
+      background: #222;
+    }
+    .sub-tab-btns button {
+      margin: 0 6px;
+      padding: 6px 14px;
+      border: none;
+      border-radius: 5px;
+      background: #333;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: background 0.3s ease;
+    }
+    .sub-tab-btns button:hover {
+      background: #0af;
+    }
+    .sub-tab-btns .active {
+      background: #0af;
+    }
+
+    /* নিচের বড় ট্যাব স্টাইল */
+    .bottom-tab-btns {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #222;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.8);
+      z-index: 1000;
+    }
+    .bottom-tab-btns button {
+      background: #333;
+      border: none;
+      color: #fff;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      flex: 1;
+      margin: 0 8px;
+      transition: background 0.3s ease;
+    }
+    .bottom-tab-btns button.active {
+      background: #0af;
+      color: #fff;
+    }
+    .bottom-tab-btns button:hover:not(.active) {
+      background: #555;
+    }
+
+    #match-list {
+      padding: 10px 10px 70px; /* নিচের ট্যাব স্পেস ফাঁকা রাখলাম */
+    }
+    .match {
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .match:hover {
+      box-shadow: 0 0 15px #0af;
+      transform: scale(1.03);
+    }
+    .teams {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .teams img {
+      height: 30px;
+      width: 30px;
+      border-radius: 50%;
+      margin: 0 10px;
+    }
+    .match-time {
+      font-size: 14px;
+      text-align: center;
+      margin-bottom: 8px;
+      color: #bbb;
+    }
+    .countdown, .started {
+      font-size: 15px;
+      text-align: center;
+      color: #0f0;
+      margin-bottom: 10px;
+    }
+    .btns {
+      text-align: center;
+      margin-top: 10px;
+    }
+    .btns a {
+      background: #08f;
+      color: #fff;
+      padding: 6px 12px;
+      text-decoration: none;
+      border-radius: 5px;
+      margin: 0 5px;
+      display: inline-block;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .liveBlink {
+      display: inline-block;
+      padding: 6px 10px;
+      font-weight: 900;
+      font-size: 10px;
+      color: white;
+      background: linear-gradient(45deg, #ff003c, #ff7700, #ff003c);
+      background-size: 200% 200%;
+      border-radius: 25px;
+      animation: gradientPulse 3s ease infinite, blinkOpacity 1.5s infinite;
+      box-shadow: 0 0 10px #ff003c, 0 0 20px #ff7700;
+      user-select: none;
+      text-transform: uppercase;
+    }
+    @keyframes blinkOpacity {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    @keyframes gradientPulse {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* TV & FM আলাদা সেকশন */
+    #tv-section, #fm-section {
+      padding: 10px;
+      font-size: 16px;
+      color: #ccc;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">BDStreamHub</div>
+  <div class="search-container">
+    <input id="search" type="text" placeholder="Search matches or teams" />
+    
+  <div class="menu-dropdown">
+  <button class="menu-toggle">⋮</button>
+  <div class="dropdown-content">
+    <a href="https://play.google.com/store/apps/details?id=com.genuine.leone" target="_blank">📲 Download NS Player</a>
+    <a href="https://t.me/BDStreamHub" target="_blank">📣 Join Telegram</a>
+  </div>
+</nav>
+
+<div class="notice">
+  <marquee scrollamount="5">Welcome To BDStreamHub ! ⚠️ Attention All Users ! For flawless live sports streaming on your mobile device ! please install the NS Player app now ! Without NS Player, videos may not play properly or could stop unexpectedly ! 📲 Don’t miss a single moment — install NS Player today and enjoy uninterrupted live matches ! You can download the app from:
+Google Play Store or join our Telegram channel for the latest updates and app links:BDStreamHub Telegram ! </marquee>
+</div>
+
+<!-- সাব-ট্যাব শুধুমাত্র Live Category তে দেখাবে -->
+<div id="subTabs" class="sub-tab-btns" style="display:none;">
+  <button id="subLive" class="active">Live <span id="countLive"></span></button>
+  <button id="subToday">Today <span id="countToday"></span></button>
+  <button id="subUpcoming">Upcoming <span id="countUpcoming"></span></button>
+</div>
+
+<div id="match-list"></div>
+
+<!-- TV এবং FM সেকশন -->
+<div id="tv-section" style="display:none;">
+  <h2>Live TV Channels</h2>
+  <p>TV Channel 1 - Link, TV Channel 2 - Link ... (এখানে TV এর লিংক দেখাবে)</p>
+</div>
+
+<div id="fm-section" style="display:none;">
+  <h2>FM Radio Stations</h2>
+  <p>FM Station 1 - Link, FM Station 2 - Link ... (এখানে FM এর লিংক দেখাবে)</p>
+</div>
+
+<!-- নিচের বড় ৩টা ট্যাব -->
+<div class="bottom-tab-btns">
+  <button id="bottomLive" class="active">Live</button>
+  <button id="bottomTV">TV</button>
+  <button id="bottomFM">FM</button>
+</div>
+
+<script>
+  // API url (আপনার গুগল অ্যাপস স্ক্রিপ্ট / API url দিন এখানে)
+  const matchesApi = "https://script.google.com/macros/s/AKfycbys6AFNs2s1MKZ1zyJxaeUW-_Vmq5BuIEC8Qjyr-zXkx_x28F7rWTi2D0EmQlnsPvTnCQ/exec";
+
+  let matches = [];
+  let intervals = [];
+  let currentSubTab = 'live'; // Live Category এর জন্য সাব-ট্যাব
+
+  function clearIntervals() {
+    intervals.forEach(i => clearInterval(i));
+    intervals = [];
+  }
+
+  function getNow() { return new Date(); }
+  function getCountdown(t) { return Math.max(0, new Date(t) - getNow()); }
+  function formatCountdown(ms) {
+    let s = Math.floor(ms / 1000), m = Math.floor(s / 60), h = Math.floor(m / 60), d = Math.floor(h / 24);
+    h %= 24; m %= 60; s %= 60;
+    return `${d}d ${h}h ${m}m ${s}s left`;
+  }
+  function formatCountUp(ms) {
+    let s = Math.floor(ms / 1000), m = Math.floor(s / 60), h = Math.floor(m / 60);
+    s %= 60; m %= 60;
+    return `${h > 0 ? h + 'h ' : ''}${m}m ${s}s ago`;
+  }
+
+  function renderMatches(type = 'live') {
+  clearIntervals();
+  const now = getNow();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+  const list = document.getElementById('match-list');
+  list.innerHTML = "";
+  const filter = document.getElementById('search').value.toLowerCase();
+
+  let filteredMatches = matches.filter(m => {  
+  const ct = new Date(m.MatchTime);  
+  const isLive = now >= ct;  
+  
+  if (type === 'live' && !isLive) return false;  
+  
+  else if (type === 'today') {  
+    if (ct < todayStart || ct >= todayEnd || isLive) return false;  
+  }  
+  
+  else if (type === 'upcoming') {  
+    if (ct < now || (ct >= todayStart && ct < todayEnd)) return false;  
+  }  
+  
+  if (filter && !(m.Match.toLowerCase().includes(filter) || m.Team1.toLowerCase().includes(filter) || m.Team2.toLowerCase().includes(filter))) return false;  
+  
+  return true;  
+});
+
+  if (filteredMatches.length === 0) {
+  let emojiMessage = '😴 No matches available right now.';
+  if (type === 'live') emojiMessage = '📴 No live matches at the moment.';
+  else if (type === 'upcoming') emojiMessage = '🕒 No upcoming matches found.';
+  else if (type === 'today') emojiMessage = '📅 No matches scheduled for today.';
+
+  list.innerHTML = `
+    <div style="
+      max-width: 420px;
+      margin: 40px auto;
+      padding: 30px 20px;
+      background: #1e1e1e;
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+      color: #ccc;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 500;
+      text-align: center;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    ">
+      <span style="font-size: 2.5rem;">${emojiMessage.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})+/u)[0]}</span>
+      <span>${emojiMessage.replace(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})+\s*/, '')}</span>
+    </div>
+  `;
+  return;
+}
+
+  filteredMatches.forEach((m, i) => {
+    const ct = new Date(m.MatchTime);
+    const isLive = now >= ct;
+
+    const div = document.createElement('div');
+    div.className = "match";
+
+    let timerHtml = '';
+    if (isLive) {
+      const diffLive = getNow() - ct;
+      timerHtml = `
+        <div class="liveBlink">LIVE</div>
+        <div class="countdown" id="cd${type}${i}">Started ${formatCountUp(diffLive)}</div>
+      `;
+    } else {
+      timerHtml = `
+        <div class="match-time">Starts at: ${ct.toLocaleDateString('en-US')} ${ct.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit', hour12: true})}</div>
+        <div class="countdown" id="cd${type}${i}">${formatCountdown(getCountdown(m.MatchTime))}</div>
+      `;
+    }
+
+    div.innerHTML = `
+      <div class="teams">
+        <img src="${m.Team1Logo}" alt="${m.Team1} logo" loading="lazy" />
+        ${m.Team1}
+        <span style="margin: 0 10px; color: #0af;">vs</span>
+        ${m.Team2}
+        <img src="${m.Team2Logo}" alt="${m.Team2} logo" loading="lazy" />
+      </div>
+      ${timerHtml}
+      <div class="btns">
+        ${m.Intent1 ? `<a href="${m.Intent1}" target="_blank" rel="noopener noreferrer">Server 1</a>` : ""}
+        ${m.Intent2 ? `<a href="${m.Intent2}" target="_blank" rel="noopener noreferrer">Server 2</a>` : ""}
+        ${m.Intent3 ? `<a href="${m.Intent3}" target="_blank" rel="noopener noreferrer">Server 3</a>` : ""}
+      </div>
+    `;
+
+    list.appendChild(div);
+
+    if (!isLive) {
+      intervals.push(setInterval(() => {
+        const cdEl = div.querySelector(`#cd${type}${i}`);
+        if (cdEl) {
+          const remain = getCountdown(m.MatchTime);
+          cdEl.innerText = remain > 0 ? formatCountdown(remain) : "Starting soon";
+        }
+      }, 1000));
+    } else {
+      intervals.push(setInterval(() => {
+        const cdEl = div.querySelector(`#cd${type}${i}`);
+        if (cdEl) {
+          const diffLive = getNow() - ct;
+          cdEl.innerText = `Started ${formatCountUp(diffLive)}`;
+        }
+      }, 1000));
+    }
+  });
+}
+
+  // নিচের বড় ট্যাব হ্যান্ডলার
+  function showCategory(category) {
+    // প্রথমে সব ট্যাব হালকা করে দেব
+    document.getElementById('bottomLive').classList.remove('active');
+    document.getElementById('bottomTV').classList.remove('active');
+    document.getElementById('bottomFM').classList.remove('active');
+
+    // তারপর সিলেক্টেড ট্যাবে active যোগ করব
+    document.getElementById('bottom' + category.charAt(0).toUpperCase() + category.slice(1)).classList.add('active');
+
+    // সার্চ ইনপুট ফাঁকা করব
+    document.getElementById('search').value = '';
+
+    // সব সেকশন লুকিয়ে দিব
+    document.getElementById('subTabs').style.display = 'none';
+    document.getElementById('match-list').style.display = 'none';
+    document.getElementById('tv-section').style.display = 'none';
+    document.getElementById('fm-section').style.display = 'none';
+
+    if(category === 'live') {
+      // Live Category এ উপরের সাব-ট্যাব দেখাবো
+      document.getElementById('subTabs').style.display = 'block';
+      document.getElementById('match-list').style.display = 'block';
+      // প্রথমে সাব-ট্যাবে active সেট করে রেন্ডার করবো
+      currentSubTab = 'live';
+      setActiveSubTab(currentSubTab);
+      renderMatches(currentSubTab);
+    } else if(category === 'tv') {
+      document.getElementById('tv-section').style.display = 'block';
+    } else if(category === 'fm') {
+      document.getElementById('fm-section').style.display = 'block';
+    }
+  }
+
+  // সাব-ট্যাব হ্যান্ডলার
+  function setActiveSubTab(subTab) {
+  document.getElementById('subLive').classList.remove('active');
+  document.getElementById('subToday').classList.remove('active');   // নতুন Today এর জন্য
+  document.getElementById('subUpcoming').classList.remove('active');
+
+  document.getElementById('sub' + subTab.charAt(0).toUpperCase() + subTab.slice(1)).classList.add('active');
+}
+
+  document.getElementById('bottomLive').addEventListener('click', () => showCategory('live'));
+  document.getElementById('bottomTV').addEventListener('click', () => showCategory('tv'));
+  document.getElementById('bottomFM').addEventListener('click', () => showCategory('fm'));
+
+  // Sub Tab buttons click
+document.getElementById('subLive').addEventListener('click', () => {
+  currentSubTab = 'live';
+  setActiveSubTab(currentSubTab);
+  renderMatches(currentSubTab);
+});
+
+document.getElementById('subUpcoming').addEventListener('click', () => {
+  currentSubTab = 'upcoming';
+  setActiveSubTab(currentSubTab);
+  renderMatches(currentSubTab);
+});
+
+// ✅ এই লাইনটা নিচে বসাও
+document.getElementById('subToday').addEventListener('click', () => {
+  currentSubTab = 'today';
+  setActiveSubTab(currentSubTab);
+  renderMatches(currentSubTab);
+});
+
+  document.getElementById('search').addEventListener('input', () => {
+    if(document.getElementById('subTabs').style.display === 'block'){
+      renderMatches(currentSubTab);
+    }
+  });
+
+  // প্রথমে ডাটা লোড করে Live Category দেখাবে
+  fetch(matchesApi)
+  .then(res => res.json())
+  .then(data => {
+    matches = data.matches || [];
+
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+    // 🔹 সংখ্যাগুলো বের করো
+    const liveCount = matches.filter(m => new Date(m.MatchTime) <= now).length;
+    const todayCount = matches.filter(m => {
+      const ct = new Date(m.MatchTime);
+      return ct >= todayStart && ct < todayEnd && ct > now;
+    }).length;
+    const upcomingCount = matches.filter(m => new Date(m.MatchTime) > todayEnd).length;
+
+    // 🔹 UI তে সংখ্যা বসাও
+    document.getElementById("countLive").innerText = `(${liveCount})`;
+    document.getElementById("countToday").innerText = `(${todayCount})`;
+    document.getElementById("countUpcoming").innerText = `(${upcomingCount})`;
+
+    // 🔹 ম্যাচগুলোকে ফিল্টার করে সাজাও
+    const todayMatches = matches.filter(m => {
+      const ct = new Date(m.MatchTime);
+      return ct >= todayStart && ct < todayEnd && ct > now;
+    });
+
+    const upcomingMatches = matches.filter(m => {
+      const ct = new Date(m.MatchTime);
+      return ct > todayEnd;
+    });
+
+    const liveMatches = matches.filter(m => new Date(m.MatchTime) <= now);
+
+    matches = [
+      ...liveMatches.map(m => ({ ...m, isLive: true })),
+      ...todayMatches.map(m => ({ ...m, isToday: true })),
+      ...upcomingMatches.map(m => ({ ...m, isUpcoming: true })),
+    ];
+
+    showCategory('live');
+  })
+    .catch(e => {
+      console.error('Error fetching matches:', e);
+      document.getElementById('match-list').innerHTML = '<p style="text-align:center; color:#f00;">Failed to load match data.</p>';
+    });
+</script>
+
+</body>
+</html>
