@@ -111,8 +111,10 @@
 </div>
 
 <script>
-  const adminPassword = "bdhub123"; // Change this password
+  const adminPassword = "bdhub123";
   const sheetAPI = "https://script.google.com/macros/s/AKfycbys6AFNs2s1MKZ1zyJxaeUW-_Vmq5BuIEC8Qjyr-zXkx_x28F7rWTi2D0EmQlnsPvTnCQ/exec";
+
+  let editingIndex = null;
 
   function login() {
     const pass = document.getElementById("password").value;
@@ -129,15 +131,20 @@
     e.preventDefault();
     const form = e.target;
     const data = Object.fromEntries(new FormData(form).entries());
-    data.MatchTime = new Date(data.MatchTime).toISOString(); // Convert to ISO
+    data.MatchTime = new Date(data.MatchTime).toISOString();
+
+    if (editingIndex !== null) {
+      data.edit = editingIndex; // index দিয়ে আপডেট
+    }
 
     fetch(sheetAPI, {
       method: 'POST',
       body: JSON.stringify(data)
     }).then(res => res.text())
       .then(() => {
-        alert("Match added!");
+        alert(editingIndex !== null ? "Match updated!" : "Match added!");
         form.reset();
+        editingIndex = null;
         loadMatches();
       });
   };
@@ -152,6 +159,7 @@
           ${m.Team1} vs ${m.Team2} <br>
           Time: ${new Date(m.MatchTime).toLocaleString("en-BD", { timeZone: "Asia/Dhaka" })}<br>
           <div class="match-actions">
+            <button onclick="editMatch(${i})">Edit</button>
             <button onclick="deleteMatch(${i})">Delete</button>
           </div>
         </div>
@@ -167,6 +175,28 @@
         alert("Match deleted.");
         loadMatches();
       });
+  }
+
+  function editMatch(index) {
+    fetch(sheetAPI).then(res => res.json()).then(data => {
+      const matches = data.matches || [];
+      const match = matches[index];
+      const form = document.getElementById("matchForm");
+
+      form.Match.value = match.Match;
+      form.Team1.value = match.Team1;
+      form.Team2.value = match.Team2;
+      form.Team1Logo.value = match.Team1Logo;
+      form.Team2Logo.value = match.Team2Logo;
+      form.MatchTime.value = new Date(match.MatchTime).toISOString().slice(0, 16);
+      form.Intent1.value = match.Intent1 || "";
+      form.Intent2.value = match.Intent2 || "";
+      form.Intent3.value = match.Intent3 || "";
+      form.Notice.value = match.Notice || "";
+
+      editingIndex = index;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   }
 </script>
 
