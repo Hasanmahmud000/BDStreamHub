@@ -1,6 +1,6 @@
 {
   "name": "BDStreamHub",
-  "short_name": "BDStream",
+  "short_name": "BDStreamHub",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#111111",
